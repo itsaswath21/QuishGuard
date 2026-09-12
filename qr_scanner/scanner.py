@@ -41,11 +41,32 @@ else:
             )
 
             print(
-                "Risk Score:",
-                analysis["risk_score"],
-                "/ 100"
+                "Long URL:",
+                "Yes" if analysis["url_length"] else "No"
             )
 
+            print(
+                "Subdomains:",
+                analysis["subdomains"]
+            )
+
+            print(
+                "Many Hyphens:",
+                "Yes" if analysis["many_hyphens"] else "No"
+            )
+
+            print(
+                "@ Symbol:",
+                "Yes" if analysis["at_symbol"] else "No"
+            )
+
+            print(
+                "Encoded Characters:",
+                "Yes" if analysis["encoded_characters"] else "No"
+            )
+
+            print()
+            print("Risk Score:", analysis["risk_score"], "/ 100")
             print("Verdict:", analysis["verdict"])
 
             print()

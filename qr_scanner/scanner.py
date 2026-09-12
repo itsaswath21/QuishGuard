@@ -1,6 +1,6 @@
 import cv2
 from pyzbar.pyzbar import decode
-from url_checker import is_url
+from url_checker import is_url, check_https
 
 image = cv2.imread("qr_scanner/qr.png")
 
@@ -17,5 +17,10 @@ else:
 
         if is_url(data):
             print("This is a URL.")
+
+            if check_https(data):
+                print("HTTPS: Secure connection")
+            else:
+                print("HTTPS: Not used")
         else:
             print("This is not a URL.")

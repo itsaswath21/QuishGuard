@@ -1,6 +1,6 @@
 import qrcode
 
-data = "http://192.168.1.50/login"
+data = "https://example.com"
 
 qr = qrcode.make(data)
 

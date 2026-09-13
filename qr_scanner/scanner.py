@@ -1,6 +1,8 @@
 import cv2
 from pyzbar.pyzbar import decode
+
 from url_checker import is_url, analyze_url
+from domain_checker import analyze_domain
 
 
 image = cv2.imread("qr_scanner/qr.png")
@@ -18,6 +20,7 @@ else:
 
         if is_url(data):
             analysis = analyze_url(data)
+            domain_analysis = analyze_domain(data)
 
             print()
             print("URL Analysis")
@@ -63,6 +66,22 @@ else:
             print(
                 "Encoded Characters:",
                 "Yes" if analysis["encoded_characters"] else "No"
+            )
+
+            print()
+            print("Domain Analysis")
+            print("--------------------")
+
+            print(
+                "Domain:",
+                domain_analysis["domain"]
+            )
+
+            print(
+                "Subdomain:",
+                domain_analysis["subdomain"]
+                if domain_analysis["subdomain"]
+                else "None"
             )
 
             print()

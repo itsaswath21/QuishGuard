@@ -1,6 +1,8 @@
 from urllib.parse import urlparse
 import ipaddress
 
+from domain_age_checker import get_domain_age
+
 
 SUSPICIOUS_KEYWORDS = [
     "login",
@@ -84,6 +86,34 @@ def check_encoded_characters(url):
     return "%" in url
 
 
+def analyze_domain_age(url):
+    result = get_domain_age(url)
+
+    if not result:
+        return {
+            "age_days": None,
+            "age_years": None,
+            "risk_points": 0
+        }
+
+    age_days = result["age_days"]
+
+    if age_days < 30:
+        risk_points = 30
+    elif age_days < 180:
+        risk_points = 20
+    elif age_days < 365:
+        risk_points = 10
+    else:
+        risk_points = 0
+
+    return {
+        "age_days": age_days,
+        "age_years": result["age_years"],
+        "risk_points": risk_points
+    }
+
+
 def analyze_url(url):
     risk_score = 0
     reasons = []
@@ -96,6 +126,8 @@ def analyze_url(url):
     many_hyphens = check_hyphens(url)
     at_symbol = check_at_symbol(url)
     encoded_characters = check_encoded_characters(url)
+
+    domain_age = analyze_domain_age(url)
 
     if not https:
         risk_score += 20
@@ -132,6 +164,16 @@ def analyze_url(url):
         risk_score += 5
         reasons.append("URL contains encoded characters")
 
+    if domain_age["risk_points"] > 0:
+        risk_score += domain_age["risk_points"]
+
+        if domain_age["age_days"] < 30:
+            reasons.append("Domain was registered less than 30 days ago")
+        elif domain_age["age_days"] < 180:
+            reasons.append("Domain was registered less than 6 months ago")
+        else:
+            reasons.append("Domain was registered less than 1 year ago")
+
     risk_score = min(risk_score, 100)
 
     if risk_score >= 70:
@@ -150,6 +192,9 @@ def analyze_url(url):
         "many_hyphens": many_hyphens,
         "at_symbol": at_symbol,
         "encoded_characters": encoded_characters,
+        "domain_age_days": domain_age["age_days"],
+        "domain_age_years": domain_age["age_years"],
+        "domain_age_risk": domain_age["risk_points"],
         "risk_score": risk_score,
         "verdict": verdict,
         "reasons": reasons
@@ -157,7 +202,7 @@ def analyze_url(url):
 
 
 if __name__ == "__main__":
-    test_url = "http://192.168.1.50/login"
+    test_url = "https://example.com"
 
     if is_url(test_url):
         result = analyze_url(test_url)
@@ -166,26 +211,46 @@ if __name__ == "__main__":
         print("--------------------")
         print("HTTPS:", "Yes" if result["https"] else "No")
         print("IP Address:", "Yes" if result["ip_address"] else "No")
+
         print(
             "Suspicious Keywords:",
             ", ".join(result["suspicious_keywords"])
             if result["suspicious_keywords"]
             else "None"
         )
+
         print("Long URL:", "Yes" if result["url_length"] else "No")
         print("Subdomains:", result["subdomains"])
+
         print(
             "Many Hyphens:",
             "Yes" if result["many_hyphens"] else "No"
         )
+
         print(
             "@ Symbol:",
             "Yes" if result["at_symbol"] else "No"
         )
+
         print(
             "Encoded Characters:",
             "Yes" if result["encoded_characters"] else "No"
         )
+
+        print(
+            "Domain Age:",
+            result["domain_age_years"],
+            "years"
+            if result["domain_age_years"] is not None
+            else "Unavailable"
+        )
+
+        print(
+            "Domain Age Risk:",
+            "+" + str(result["domain_age_risk"])
+        )
+
+        print()
         print("Risk Score:", result["risk_score"], "/ 100")
         print("Verdict:", result["verdict"])
 

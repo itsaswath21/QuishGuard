@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 import whoisdomain
 
@@ -24,7 +24,13 @@ def get_domain_age(url):
         if not creation_date:
             return None
 
-        age_days = (datetime.now() - creation_date).days
+        if creation_date.tzinfo is not None:
+            current_time = datetime.now(timezone.utc)
+            creation_date = creation_date.astimezone(timezone.utc)
+        else:
+            current_time = datetime.now()
+
+        age_days = (current_time - creation_date).days
         age_years = round(age_days / 365, 2)
 
         return {
@@ -39,7 +45,7 @@ def get_domain_age(url):
 
 
 if __name__ == "__main__":
-    test_url = "https://example.com"
+    test_url = "https://google.com"
 
     result = get_domain_age(test_url)
 

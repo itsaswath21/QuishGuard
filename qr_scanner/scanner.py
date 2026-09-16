@@ -68,6 +68,44 @@ else:
                 "Yes" if analysis["encoded_characters"] else "No"
             )
 
+            print(
+                "Domain Age:",
+                str(analysis["domain_age_years"]) + " years"
+                if analysis["domain_age_years"] is not None
+                else "Unavailable"
+            )
+
+            print(
+                "Domain Age Risk:",
+                "+" + str(analysis["domain_age_risk"])
+            )
+
+            print(
+                "Homoglyph Detection:",
+                "Suspicious"
+                if analysis["homoglyph_suspicious"]
+                else "Normal"
+            )
+
+            print()
+            print("Redirect Analysis")
+            print("--------------------")
+
+            print(
+                "Redirect Count:",
+                analysis["redirect_count"]
+            )
+
+            print(
+                "Redirect Risk:",
+                "+" + str(analysis["redirect_risk"])
+            )
+
+            print(
+                "Final URL:",
+                analysis["final_url"]
+            )
+
             print()
             print("Domain Analysis")
             print("--------------------")
@@ -85,14 +123,65 @@ else:
             )
 
             print()
-            print("Risk Score:", analysis["risk_score"], "/ 100")
-            print("Verdict:", analysis["verdict"])
+            print("VirusTotal Reputation Analysis")
+            print("--------------------")
+
+            print(
+                "Checked:",
+                "Yes" if analysis["reputation_checked"]
+                else "No"
+            )
+
+            print(
+                "Malicious:",
+                "Yes" if analysis["reputation_malicious"]
+                else "No"
+            )
+
+            print(
+                "Threats:",
+                ", ".join(analysis["reputation_threats"])
+                if analysis["reputation_threats"]
+                else "None"
+            )
+
+            print(
+                "Reputation Risk:",
+                "+" + str(analysis["reputation_risk"])
+            )
+
+            if analysis["reputation_error"]:
+                print(
+                    "Status:",
+                    "VirusTotal reputation check unavailable"
+                )
 
             print()
-            print("Reasons:")
+            print("====================")
+            print("FINAL SECURITY RESULT")
+            print("====================")
 
-            for reason in analysis["reasons"]:
-                print("-", reason)
+            print(
+                "Risk Score:",
+                analysis["risk_score"],
+                "/ 100"
+            )
+
+            print(
+                "Verdict:",
+                analysis["verdict"]
+            )
+
+            print()
+            print("Reasons")
+            print("--------------------")
+
+            if analysis["reasons"]:
+                for reason in analysis["reasons"]:
+                    print("-", reason)
+            else:
+                print("- No suspicious indicators detected.")
 
         else:
+            print()
             print("This is not a URL.")

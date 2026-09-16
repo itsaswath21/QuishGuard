@@ -1,6 +1,6 @@
 import qrcode
 
-data = "https://example.com"
+data = "https://example.com@google.com"
 
 qr = qrcode.make(data)
 

@@ -82,7 +82,18 @@ def check_hyphens(url):
 
 
 def check_at_symbol(url):
-    return "@" in url
+    parsed = urlparse(url)
+
+    return "@" in parsed.netloc
+
+
+def get_at_symbol_destination(url):
+    parsed = urlparse(url)
+
+    if "@" not in parsed.netloc:
+        return None
+
+    return parsed.hostname
 
 
 def check_encoded_characters(url):
@@ -128,6 +139,7 @@ def analyze_url(url):
     subdomains = count_subdomains(url)
     many_hyphens = check_hyphens(url)
     at_symbol = check_at_symbol(url)
+    at_symbol_destination = get_at_symbol_destination(url)
     encoded_characters = check_encoded_characters(url)
 
     domain_age = analyze_domain_age(url)
@@ -164,7 +176,14 @@ def analyze_url(url):
 
     if at_symbol:
         risk_score += 20
-        reasons.append("URL contains an @ symbol")
+
+        if at_symbol_destination:
+            reasons.append(
+                "URL contains an @ symbol and the actual destination is "
+                + at_symbol_destination
+            )
+        else:
+            reasons.append("URL contains an @ symbol")
 
     if encoded_characters:
         risk_score += 5
@@ -237,6 +256,7 @@ def analyze_url(url):
         "subdomains": subdomains,
         "many_hyphens": many_hyphens,
         "at_symbol": at_symbol,
+        "at_symbol_destination": at_symbol_destination,
         "encoded_characters": encoded_characters,
         "domain_age_days": domain_age["age_days"],
         "domain_age_years": domain_age["age_years"],
@@ -301,6 +321,13 @@ if __name__ == "__main__":
         print(
             "@ Symbol:",
             "Yes" if result["at_symbol"] else "No"
+        )
+
+        print(
+            "@ Destination:",
+            result["at_symbol_destination"]
+            if result["at_symbol_destination"]
+            else "None"
         )
 
         print(

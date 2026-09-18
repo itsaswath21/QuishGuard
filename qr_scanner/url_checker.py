@@ -96,6 +96,21 @@ def get_at_symbol_destination(url):
     return parsed.hostname
 
 
+def check_deceptive_at_symbol(url):
+    parsed = urlparse(url)
+
+    if "@" not in parsed.netloc:
+        return False
+
+    user_info = parsed.netloc.split("@")[0]
+    hostname = parsed.hostname
+
+    if not user_info or not hostname:
+        return False
+
+    return "." in user_info
+
+
 def check_encoded_characters(url):
     return "%" in url
 
@@ -140,6 +155,7 @@ def analyze_url(url):
     many_hyphens = check_hyphens(url)
     at_symbol = check_at_symbol(url)
     at_symbol_destination = get_at_symbol_destination(url)
+    deceptive_at_symbol = check_deceptive_at_symbol(url)
     encoded_characters = check_encoded_characters(url)
 
     domain_age = analyze_domain_age(url)
@@ -184,6 +200,12 @@ def analyze_url(url):
             )
         else:
             reasons.append("URL contains an @ symbol")
+
+    if deceptive_at_symbol:
+        risk_score += 15
+        reasons.append(
+            "Possible deceptive URL: domain-like text appears before the @ symbol"
+        )
 
     if encoded_characters:
         risk_score += 5
@@ -257,6 +279,7 @@ def analyze_url(url):
         "many_hyphens": many_hyphens,
         "at_symbol": at_symbol,
         "at_symbol_destination": at_symbol_destination,
+        "deceptive_at_symbol": deceptive_at_symbol,
         "encoded_characters": encoded_characters,
         "domain_age_days": domain_age["age_days"],
         "domain_age_years": domain_age["age_years"],
@@ -331,6 +354,11 @@ if __name__ == "__main__":
         )
 
         print(
+            "Deceptive @ Pattern:",
+            "Yes" if result["deceptive_at_symbol"] else "No"
+        )
+
+        print(
             "Encoded Characters:",
             "Yes" if result["encoded_characters"] else "No"
         )
@@ -396,7 +424,8 @@ if __name__ == "__main__":
         print("Verdict:", result["verdict"])
 
         print()
-        print("Reasons:")
+        print("Reasons")
+        print("--------------------")
 
         if result["reasons"]:
             for reason in result["reasons"]:

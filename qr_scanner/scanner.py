@@ -26,15 +26,8 @@ else:
             print("URL Analysis")
             print("--------------------")
 
-            print(
-                "HTTPS:",
-                "Yes" if analysis["https"] else "No"
-            )
-
-            print(
-                "IP Address:",
-                "Yes" if analysis["ip_address"] else "No"
-            )
+            print("HTTPS:", "Yes" if analysis["https"] else "No")
+            print("IP Address:", "Yes" if analysis["ip_address"] else "No")
 
             print(
                 "Suspicious Keywords:",
@@ -43,29 +36,33 @@ else:
                 else "None"
             )
 
-            print(
-                "Long URL:",
-                "Yes" if analysis["url_length"] else "No"
-            )
-
-            print(
-                "Subdomains:",
-                analysis["subdomains"]
-            )
+            print("Long URL:", "Yes" if analysis["url_length"] else "No")
+            print("Subdomains:", analysis["subdomains"])
 
             print(
                 "Many Hyphens:",
                 "Yes" if analysis["many_hyphens"] else "No"
             )
 
+            print("@ Symbol:", "Yes" if analysis["at_symbol"] else "No")
+
             print(
-                "@ Symbol:",
-                "Yes" if analysis["at_symbol"] else "No"
+                "@ Destination:",
+                analysis["at_symbol_destination"]
+                if analysis["at_symbol_destination"]
+                else "None"
+            )
+
+            print(
+                "Deceptive @ Pattern:",
+                "Yes" if analysis["deceptive_at_symbol"]
+                else "No"
             )
 
             print(
                 "Encoded Characters:",
-                "Yes" if analysis["encoded_characters"] else "No"
+                "Yes" if analysis["encoded_characters"]
+                else "No"
             )
 
             print(
@@ -75,10 +72,7 @@ else:
                 else "Unavailable"
             )
 
-            print(
-                "Domain Age Risk:",
-                "+" + str(analysis["domain_age_risk"])
-            )
+            print("Domain Age Risk:", "+" + str(analysis["domain_age_risk"]))
 
             print(
                 "Homoglyph Detection:",
@@ -91,29 +85,15 @@ else:
             print("Redirect Analysis")
             print("--------------------")
 
-            print(
-                "Redirect Count:",
-                analysis["redirect_count"]
-            )
-
-            print(
-                "Redirect Risk:",
-                "+" + str(analysis["redirect_risk"])
-            )
-
-            print(
-                "Final URL:",
-                analysis["final_url"]
-            )
+            print("Redirect Count:", analysis["redirect_count"])
+            print("Redirect Risk:", "+" + str(analysis["redirect_risk"]))
+            print("Final URL:", analysis["final_url"])
 
             print()
             print("Domain Analysis")
             print("--------------------")
 
-            print(
-                "Domain:",
-                domain_analysis["domain"]
-            )
+            print("Domain:", domain_analysis["domain"])
 
             print(
                 "Subdomain:",
@@ -145,10 +125,7 @@ else:
                 else "None"
             )
 
-            print(
-                "Reputation Risk:",
-                "+" + str(analysis["reputation_risk"])
-            )
+            print("Reputation Risk:", "+" + str(analysis["reputation_risk"]))
 
             if analysis["reputation_error"]:
                 print(
@@ -161,16 +138,8 @@ else:
             print("FINAL SECURITY RESULT")
             print("====================")
 
-            print(
-                "Risk Score:",
-                analysis["risk_score"],
-                "/ 100"
-            )
-
-            print(
-                "Verdict:",
-                analysis["verdict"]
-            )
+            print("Risk Score:", analysis["risk_score"], "/ 100")
+            print("Verdict:", analysis["verdict"])
 
             print()
             print("Reasons")

@@ -1,24 +1,30 @@
+import tldextract
 from urllib.parse import urlparse
 
 
 def extract_domain(url):
     parsed = urlparse(url)
 
-    return parsed.hostname
+    if not parsed.hostname:
+        return None
+
+    extracted = tldextract.extract(parsed.hostname)
+
+    if not extracted.domain or not extracted.suffix:
+        return parsed.hostname
+
+    return extracted.domain + "." + extracted.suffix
 
 
 def extract_subdomain(url):
-    domain = extract_domain(url)
+    parsed = urlparse(url)
 
-    if not domain:
+    if not parsed.hostname:
         return None
 
-    parts = domain.split(".")
+    extracted = tldextract.extract(parsed.hostname)
 
-    if len(parts) > 2:
-        return ".".join(parts[:-2])
-
-    return None
+    return extracted.subdomain if extracted.subdomain else None
 
 
 def analyze_domain(url):
@@ -32,7 +38,7 @@ def analyze_domain(url):
 
 
 if __name__ == "__main__":
-    test_url = "https://secure.example.com/login"
+    test_url = "https://secure.example.co.uk/login"
 
     result = analyze_domain(test_url)
 
@@ -41,5 +47,7 @@ if __name__ == "__main__":
     print("Domain:", result["domain"])
     print(
         "Subdomain:",
-        result["subdomain"] if result["subdomain"] else "None"
+        result["subdomain"]
+        if result["subdomain"]
+        else "None"
     )

@@ -15,6 +15,9 @@ RISK_WEIGHTS = {
     "redirect_1": 5,
     "redirect_2": 10,
     "redirect_3_or_more": 20,
+    "redirect_domain_change": 10,
+    "redirect_loop": 20,
+    "excessive_redirects": 15,
     "malicious_reputation": 50
 }
 
@@ -112,6 +115,24 @@ def calculate_risk_score(indicators):
             + " intermediate URL(s)"
         )
 
+    if indicators["redirect_domain_changed"]:
+        score += RISK_WEIGHTS["redirect_domain_change"]
+        reasons.append(
+            "Redirect changes the destination domain"
+        )
+
+    if indicators["redirect_loop"]:
+        score += RISK_WEIGHTS["redirect_loop"]
+        reasons.append(
+            "Redirect chain contains a possible loop"
+        )
+
+    if indicators["excessive_redirects"]:
+        score += RISK_WEIGHTS["excessive_redirects"]
+        reasons.append(
+            "URL uses an excessive number of redirects"
+        )
+
     if indicators["reputation_malicious"]:
         score += RISK_WEIGHTS["malicious_reputation"]
         reasons.append(
@@ -136,9 +157,9 @@ def calculate_risk_score(indicators):
 
 if __name__ == "__main__":
     test_indicators = {
-        "https": False,
-        "ip_address": True,
-        "suspicious_keywords": ["login"],
+        "https": True,
+        "ip_address": False,
+        "suspicious_keywords": [],
         "url_length": False,
         "subdomains": 0,
         "many_hyphens": False,
@@ -148,7 +169,10 @@ if __name__ == "__main__":
         "encoded_characters": False,
         "domain_age_days": None,
         "homoglyph_suspicious": False,
-        "redirect_count": 0,
+        "redirect_count": 2,
+        "redirect_domain_changed": True,
+        "redirect_loop": False,
+        "excessive_redirects": False,
         "reputation_malicious": False
     }
 

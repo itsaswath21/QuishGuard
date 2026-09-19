@@ -24,13 +24,11 @@ SUSPICIOUS_KEYWORDS = [
 
 def is_url(text):
     parsed = urlparse(text)
-
     return parsed.scheme in ["http", "https"] and parsed.netloc != ""
 
 
 def check_https(url):
     parsed = urlparse(url)
-
     return parsed.scheme == "https"
 
 
@@ -46,7 +44,6 @@ def check_ip_address(url):
 
 def check_suspicious_keywords(url):
     url_lower = url.lower()
-
     found_keywords = []
 
     for keyword in SUSPICIOUS_KEYWORDS:
@@ -161,11 +158,8 @@ def analyze_url(url):
     encoded_characters = check_encoded_characters(url)
 
     domain_age = analyze_domain_age(url)
-
     homoglyph_analysis = analyze_homoglyphs(url)
-
     redirect_analysis = analyze_redirects(url)
-
     reputation_analysis = check_reputation(url)
 
     indicators = {
@@ -182,6 +176,9 @@ def analyze_url(url):
         "domain_age_days": domain_age["age_days"],
         "homoglyph_suspicious": homoglyph_analysis["suspicious"],
         "redirect_count": redirect_analysis["redirect_count"],
+        "redirect_domain_changed": redirect_analysis["domain_changed"],
+        "redirect_loop": redirect_analysis["redirect_loop"],
+        "excessive_redirects": redirect_analysis["excessive_redirects"],
         "reputation_malicious": reputation_analysis["malicious"]
     }
 
@@ -205,11 +202,9 @@ def analyze_url(url):
         "url_length": url_length,
         "subdomains": subdomains,
         "many_hyphens": many_hyphens,
-
         "at_symbol": at_symbol,
         "at_symbol_destination": at_symbol_destination,
         "deceptive_at_symbol": deceptive_at_symbol,
-
         "encoded_characters": encoded_characters,
 
         "domain_age_days": domain_age["age_days"],
@@ -219,15 +214,14 @@ def analyze_url(url):
 
         "homoglyph_suspicious": homoglyph_analysis["suspicious"],
         "homoglyph_non_ascii": homoglyph_analysis["non_ascii"],
-        "homoglyph_characters": homoglyph_analysis[
-            "confusable_characters"
-        ],
-        "homoglyph_normalized_domain": homoglyph_analysis[
-            "normalized_domain"
-        ],
+        "homoglyph_characters": homoglyph_analysis["confusable_characters"],
+        "homoglyph_normalized_domain": homoglyph_analysis["normalized_domain"],
 
         "redirect_count": redirect_analysis["redirect_count"],
         "redirect_risk": redirect_risk,
+        "redirect_domain_changed": redirect_analysis["domain_changed"],
+        "redirect_loop": redirect_analysis["redirect_loop"],
+        "excessive_redirects": redirect_analysis["excessive_redirects"],
         "final_url": redirect_analysis["final_url"],
         "redirect_chain": redirect_analysis["redirect_chain"],
 
@@ -253,7 +247,12 @@ if __name__ == "__main__":
         print("--------------------")
 
         print("URL:", test_url)
-        print("HTTPS:", "Yes" if result["https"] else "No")
+
+        print(
+            "HTTPS:",
+            "Yes" if result["https"] else "No"
+        )
+
         print(
             "IP Address:",
             "Yes" if result["ip_address"] else "No"
@@ -271,7 +270,10 @@ if __name__ == "__main__":
             "Yes" if result["url_length"] else "No"
         )
 
-        print("Subdomains:", result["subdomains"])
+        print(
+            "Subdomains:",
+            result["subdomains"]
+        )
 
         print(
             "Many Hyphens:",
@@ -292,8 +294,7 @@ if __name__ == "__main__":
 
         print(
             "Deceptive @ Pattern:",
-            "Yes" if result["deceptive_at_symbol"]
-            else "No"
+            "Yes" if result["deceptive_at_symbol"] else "No"
         )
 
         print(
@@ -332,6 +333,38 @@ if __name__ == "__main__":
             result["homoglyph_normalized_domain"]
             if result["homoglyph_normalized_domain"]
             else "Unavailable"
+        )
+
+        print()
+        print("Redirect Analysis")
+        print("--------------------")
+
+        print(
+            "Redirect Count:",
+            result["redirect_count"]
+        )
+
+        print(
+            "Domain Changed:",
+            "Yes" if result["redirect_domain_changed"]
+            else "No"
+        )
+
+        print(
+            "Redirect Loop:",
+            "Yes" if result["redirect_loop"]
+            else "No"
+        )
+
+        print(
+            "Excessive Redirects:",
+            "Yes" if result["excessive_redirects"]
+            else "No"
+        )
+
+        print(
+            "Final URL:",
+            result["final_url"]
         )
 
         print()

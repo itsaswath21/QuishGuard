@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 
 
 CONFUSABLE_CHARACTERS = {
+    # Cyrillic
     "а": "a",
     "е": "e",
     "о": "o",
@@ -14,6 +15,8 @@ CONFUSABLE_CHARACTERS = {
     "ѕ": "s",
     "ԁ": "d",
     "ɡ": "g",
+
+    # Greek
     "Α": "A",
     "Β": "B",
     "Ε": "E",
@@ -26,12 +29,15 @@ CONFUSABLE_CHARACTERS = {
     "Ο": "O",
     "Ρ": "P",
     "Τ": "T",
-    "Χ": "X",
+    "Χ": "X"
 }
 
 
 def extract_domain(url):
     parsed = urlparse(url)
+
+    if not parsed.hostname:
+        return None
 
     return parsed.hostname
 
@@ -59,17 +65,45 @@ def check_non_ascii(domain):
     return any(ord(character) > 127 for character in domain)
 
 
+def normalize_domain(domain):
+    if not domain:
+        return None
+
+    normalized = ""
+
+    for character in domain:
+        if character in CONFUSABLE_CHARACTERS:
+            normalized += CONFUSABLE_CHARACTERS[character]
+        else:
+            normalized += character
+
+    return normalized
+
+
 def analyze_homoglyphs(url):
     domain = extract_domain(url)
 
+    if not domain:
+        return {
+            "domain": None,
+            "non_ascii": False,
+            "confusable_characters": [],
+            "normalized_domain": None,
+            "suspicious": False
+        }
+
     confusable_characters = find_confusable_characters(domain)
     non_ascii = check_non_ascii(domain)
+    normalized_domain = normalize_domain(domain)
+
+    suspicious = len(confusable_characters) > 0
 
     return {
         "domain": domain,
         "non_ascii": non_ascii,
         "confusable_characters": confusable_characters,
-        "suspicious": len(confusable_characters) > 0
+        "normalized_domain": normalized_domain,
+        "suspicious": suspicious
     }
 
 
@@ -82,15 +116,14 @@ if __name__ == "__main__":
     print("--------------------")
 
     print("Domain:", result["domain"])
+    print("Non-ASCII:", result["non_ascii"])
+    print("Suspicious:", result["suspicious"])
+    print("Normalized Domain:", result["normalized_domain"])
 
-    print(
-        "Non-ASCII Characters:",
-        "Yes" if result["non_ascii"] else "No"
-    )
+    print()
+    print("Confusable Characters:")
 
     if result["confusable_characters"]:
-        print("Confusable Characters:")
-
         for item in result["confusable_characters"]:
             print(
                 "-",
@@ -99,9 +132,4 @@ if __name__ == "__main__":
                 item["looks_like"]
             )
     else:
-        print("Confusable Characters: None")
-
-    print(
-        "Suspicious:",
-        "Yes" if result["suspicious"] else "No"
-    )
+        print("- None")

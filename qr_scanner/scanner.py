@@ -27,7 +27,10 @@ else:
             print("--------------------")
 
             print("HTTPS:", "Yes" if analysis["https"] else "No")
-            print("IP Address:", "Yes" if analysis["ip_address"] else "No")
+            print(
+                "IP Address:",
+                "Yes" if analysis["ip_address"] else "No"
+            )
 
             print(
                 "Suspicious Keywords:",
@@ -36,7 +39,11 @@ else:
                 else "None"
             )
 
-            print("Long URL:", "Yes" if analysis["url_length"] else "No")
+            print(
+                "Long URL:",
+                "Yes" if analysis["url_length"] else "No"
+            )
+
             print("Subdomains:", analysis["subdomains"])
 
             print(
@@ -44,7 +51,10 @@ else:
                 "Yes" if analysis["many_hyphens"] else "No"
             )
 
-            print("@ Symbol:", "Yes" if analysis["at_symbol"] else "No")
+            print(
+                "@ Symbol:",
+                "Yes" if analysis["at_symbol"] else "No"
+            )
 
             print(
                 "@ Destination:",
@@ -55,13 +65,15 @@ else:
 
             print(
                 "Deceptive @ Pattern:",
-                "Yes" if analysis["deceptive_at_symbol"]
+                "Yes"
+                if analysis["deceptive_at_symbol"]
                 else "No"
             )
 
             print(
                 "Encoded Characters:",
-                "Yes" if analysis["encoded_characters"]
+                "Yes"
+                if analysis["encoded_characters"]
                 else "No"
             )
 
@@ -72,7 +84,15 @@ else:
                 else "Unavailable"
             )
 
-            print("Domain Age Risk:", "+" + str(analysis["domain_age_risk"]))
+            print(
+                "Domain Age Category:",
+                analysis["domain_age_category"]
+            )
+
+            print(
+                "Domain Age Risk:",
+                "+" + str(analysis["domain_age_risk"])
+            )
 
             print(
                 "Homoglyph Detection:",
@@ -81,19 +101,60 @@ else:
                 else "Normal"
             )
 
+            print(
+                "Non-ASCII Domain:",
+                "Yes"
+                if analysis["homoglyph_non_ascii"]
+                else "No"
+            )
+
+            print(
+                "Normalized Domain:",
+                analysis["homoglyph_normalized_domain"]
+                if analysis["homoglyph_normalized_domain"]
+                else "Unavailable"
+            )
+
+            print("Confusable Characters:")
+
+            if analysis["homoglyph_characters"]:
+                for character in analysis["homoglyph_characters"]:
+                    print(
+                        "-",
+                        character["character"],
+                        "looks like",
+                        character["looks_like"]
+                    )
+            else:
+                print("- None")
+
             print()
             print("Redirect Analysis")
             print("--------------------")
 
-            print("Redirect Count:", analysis["redirect_count"])
-            print("Redirect Risk:", "+" + str(analysis["redirect_risk"]))
-            print("Final URL:", analysis["final_url"])
+            print(
+                "Redirect Count:",
+                analysis["redirect_count"]
+            )
+
+            print(
+                "Redirect Risk:",
+                "+" + str(analysis["redirect_risk"])
+            )
+
+            print(
+                "Final URL:",
+                analysis["final_url"]
+            )
 
             print()
             print("Domain Analysis")
             print("--------------------")
 
-            print("Domain:", domain_analysis["domain"])
+            print(
+                "Domain:",
+                domain_analysis["domain"]
+            )
 
             print(
                 "Subdomain:",
@@ -108,13 +169,15 @@ else:
 
             print(
                 "Checked:",
-                "Yes" if analysis["reputation_checked"]
+                "Yes"
+                if analysis["reputation_checked"]
                 else "No"
             )
 
             print(
                 "Malicious:",
-                "Yes" if analysis["reputation_malicious"]
+                "Yes"
+                if analysis["reputation_malicious"]
                 else "No"
             )
 
@@ -125,7 +188,10 @@ else:
                 else "None"
             )
 
-            print("Reputation Risk:", "+" + str(analysis["reputation_risk"]))
+            print(
+                "Reputation Risk:",
+                "+" + str(analysis["reputation_risk"])
+            )
 
             if analysis["reputation_error"]:
                 print(
@@ -138,8 +204,16 @@ else:
             print("FINAL SECURITY RESULT")
             print("====================")
 
-            print("Risk Score:", analysis["risk_score"], "/ 100")
-            print("Verdict:", analysis["verdict"])
+            print(
+                "Risk Score:",
+                analysis["risk_score"],
+                "/ 100"
+            )
+
+            print(
+                "Verdict:",
+                analysis["verdict"]
+            )
 
             print()
             print("Reasons")

@@ -5,6 +5,7 @@ from domain_age_checker import get_domain_age
 from homoglyph_checker import analyze_homoglyphs
 from redirect_checker import analyze_redirects
 from reputation_checker import check_reputation
+from risk_engine import calculate_risk_score
 
 
 SUSPICIOUS_KEYWORDS = [
@@ -39,7 +40,7 @@ def check_ip_address(url):
     try:
         ipaddress.ip_address(parsed.hostname)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
 
@@ -122,6 +123,7 @@ def analyze_domain_age(url):
         return {
             "age_days": None,
             "age_years": None,
+            "age_category": "Unavailable",
             "risk_points": 0
         }
 
@@ -139,138 +141,34 @@ def analyze_domain_age(url):
     return {
         "age_days": age_days,
         "age_years": result["age_years"],
+        "age_category": result["age_category"],
         "risk_points": risk_points
     }
 
 
 def analyze_url(url):
-    risk_score = 0
-    reasons = []
-
     https = check_https(url)
     ip_address = check_ip_address(url)
     suspicious_keywords = check_suspicious_keywords(url)
     url_length = check_url_length(url)
     subdomains = count_subdomains(url)
     many_hyphens = check_hyphens(url)
+
     at_symbol = check_at_symbol(url)
     at_symbol_destination = get_at_symbol_destination(url)
     deceptive_at_symbol = check_deceptive_at_symbol(url)
+
     encoded_characters = check_encoded_characters(url)
 
     domain_age = analyze_domain_age(url)
+
     homoglyph_analysis = analyze_homoglyphs(url)
+
     redirect_analysis = analyze_redirects(url)
+
     reputation_analysis = check_reputation(url)
 
-    if not https:
-        risk_score += 20
-        reasons.append("URL does not use HTTPS")
-
-    if ip_address:
-        risk_score += 30
-        reasons.append("URL uses an IP address instead of a domain")
-
-    if suspicious_keywords:
-        risk_score += 10
-        reasons.append(
-            "Suspicious keyword detected: "
-            + ", ".join(suspicious_keywords)
-        )
-
-    if url_length:
-        risk_score += 10
-        reasons.append("URL is unusually long")
-
-    if subdomains >= 3:
-        risk_score += 10
-        reasons.append("URL contains many subdomains")
-
-    if many_hyphens:
-        risk_score += 5
-        reasons.append("Domain contains many hyphens")
-
-    if at_symbol:
-        risk_score += 20
-
-        if at_symbol_destination:
-            reasons.append(
-                "URL contains an @ symbol and the actual destination is "
-                + at_symbol_destination
-            )
-        else:
-            reasons.append("URL contains an @ symbol")
-
-    if deceptive_at_symbol:
-        risk_score += 15
-        reasons.append(
-            "Possible deceptive URL: domain-like text appears before the @ symbol"
-        )
-
-    if encoded_characters:
-        risk_score += 5
-        reasons.append("URL contains encoded characters")
-
-    if domain_age["risk_points"] > 0:
-        risk_score += domain_age["risk_points"]
-
-        if domain_age["age_days"] < 30:
-            reasons.append(
-                "Domain was registered less than 30 days ago"
-            )
-        elif domain_age["age_days"] < 180:
-            reasons.append(
-                "Domain was registered less than 6 months ago"
-            )
-        else:
-            reasons.append(
-                "Domain was registered less than 1 year ago"
-            )
-
-    if homoglyph_analysis["suspicious"]:
-        risk_score += 25
-        reasons.append(
-            "Domain contains look-alike Unicode characters"
-        )
-
-    redirect_count = redirect_analysis["redirect_count"]
-
-    if redirect_count == 1:
-        redirect_risk = 5
-    elif redirect_count == 2:
-        redirect_risk = 10
-    elif redirect_count >= 3:
-        redirect_risk = 20
-    else:
-        redirect_risk = 0
-
-    if redirect_risk > 0:
-        risk_score += redirect_risk
-        reasons.append(
-            "URL redirects through "
-            + str(redirect_count)
-            + " intermediate URL(s)"
-        )
-
-    if reputation_analysis["malicious"]:
-        reputation_risk = 50
-        risk_score += reputation_risk
-        reasons.append(
-            "URL is flagged by VirusTotal as malicious"
-        )
-    else:
-        reputation_risk = 0
-
-    risk_score = min(risk_score, 100)
-
-    if risk_score >= 70:
-        verdict = "HIGH RISK"
-    elif risk_score >= 30:
-        verdict = "SUSPICIOUS"
-    else:
-        verdict = "LOW RISK"
-
-    return {
+    indicators = {
         "https": https,
         "ip_address": ip_address,
         "suspicious_keywords": suspicious_keywords,
@@ -282,21 +180,66 @@ def analyze_url(url):
         "deceptive_at_symbol": deceptive_at_symbol,
         "encoded_characters": encoded_characters,
         "domain_age_days": domain_age["age_days"],
-        "domain_age_years": domain_age["age_years"],
-        "domain_age_risk": domain_age["risk_points"],
         "homoglyph_suspicious": homoglyph_analysis["suspicious"],
-        "redirect_count": redirect_count,
+        "redirect_count": redirect_analysis["redirect_count"],
+        "reputation_malicious": reputation_analysis["malicious"]
+    }
+
+    risk_result = calculate_risk_score(indicators)
+
+    if redirect_analysis["redirect_count"] == 1:
+        redirect_risk = 5
+    elif redirect_analysis["redirect_count"] == 2:
+        redirect_risk = 10
+    elif redirect_analysis["redirect_count"] >= 3:
+        redirect_risk = 20
+    else:
+        redirect_risk = 0
+
+    reputation_risk = 50 if reputation_analysis["malicious"] else 0
+
+    return {
+        "https": https,
+        "ip_address": ip_address,
+        "suspicious_keywords": suspicious_keywords,
+        "url_length": url_length,
+        "subdomains": subdomains,
+        "many_hyphens": many_hyphens,
+
+        "at_symbol": at_symbol,
+        "at_symbol_destination": at_symbol_destination,
+        "deceptive_at_symbol": deceptive_at_symbol,
+
+        "encoded_characters": encoded_characters,
+
+        "domain_age_days": domain_age["age_days"],
+        "domain_age_years": domain_age["age_years"],
+        "domain_age_category": domain_age["age_category"],
+        "domain_age_risk": domain_age["risk_points"],
+
+        "homoglyph_suspicious": homoglyph_analysis["suspicious"],
+        "homoglyph_non_ascii": homoglyph_analysis["non_ascii"],
+        "homoglyph_characters": homoglyph_analysis[
+            "confusable_characters"
+        ],
+        "homoglyph_normalized_domain": homoglyph_analysis[
+            "normalized_domain"
+        ],
+
+        "redirect_count": redirect_analysis["redirect_count"],
         "redirect_risk": redirect_risk,
         "final_url": redirect_analysis["final_url"],
         "redirect_chain": redirect_analysis["redirect_chain"],
+
         "reputation_checked": reputation_analysis["checked"],
         "reputation_malicious": reputation_analysis["malicious"],
         "reputation_threats": reputation_analysis["threats"],
         "reputation_error": reputation_analysis["error"],
         "reputation_risk": reputation_risk,
-        "risk_score": risk_score,
-        "verdict": verdict,
-        "reasons": reasons
+
+        "risk_score": risk_result["risk_score"],
+        "verdict": risk_result["verdict"],
+        "reasons": risk_result["reasons"]
     }
 
 
@@ -309,11 +252,8 @@ if __name__ == "__main__":
         print("URL Analysis")
         print("--------------------")
 
-        print(
-            "HTTPS:",
-            "Yes" if result["https"] else "No"
-        )
-
+        print("URL:", test_url)
+        print("HTTPS:", "Yes" if result["https"] else "No")
         print(
             "IP Address:",
             "Yes" if result["ip_address"] else "No"
@@ -331,10 +271,7 @@ if __name__ == "__main__":
             "Yes" if result["url_length"] else "No"
         )
 
-        print(
-            "Subdomains:",
-            result["subdomains"]
-        )
+        print("Subdomains:", result["subdomains"])
 
         print(
             "Many Hyphens:",
@@ -355,12 +292,14 @@ if __name__ == "__main__":
 
         print(
             "Deceptive @ Pattern:",
-            "Yes" if result["deceptive_at_symbol"] else "No"
+            "Yes" if result["deceptive_at_symbol"]
+            else "No"
         )
 
         print(
             "Encoded Characters:",
-            "Yes" if result["encoded_characters"] else "No"
+            "Yes" if result["encoded_characters"]
+            else "No"
         )
 
         print(
@@ -371,8 +310,8 @@ if __name__ == "__main__":
         )
 
         print(
-            "Domain Age Risk:",
-            "+" + str(result["domain_age_risk"])
+            "Domain Age Category:",
+            result["domain_age_category"]
         )
 
         print(
@@ -383,40 +322,16 @@ if __name__ == "__main__":
         )
 
         print(
-            "Redirect Count:",
-            result["redirect_count"]
+            "Non-ASCII Domain:",
+            "Yes" if result["homoglyph_non_ascii"]
+            else "No"
         )
 
         print(
-            "Redirect Risk:",
-            "+" + str(result["redirect_risk"])
-        )
-
-        print(
-            "Final URL:",
-            result["final_url"]
-        )
-
-        print(
-            "Reputation Checked:",
-            "Yes" if result["reputation_checked"] else "No"
-        )
-
-        print(
-            "Malicious:",
-            "Yes" if result["reputation_malicious"] else "No"
-        )
-
-        print(
-            "Threats:",
-            ", ".join(result["reputation_threats"])
-            if result["reputation_threats"]
-            else "None"
-        )
-
-        print(
-            "Reputation Risk:",
-            "+" + str(result["reputation_risk"])
+            "Normalized Domain:",
+            result["homoglyph_normalized_domain"]
+            if result["homoglyph_normalized_domain"]
+            else "Unavailable"
         )
 
         print()

@@ -1,10 +1,15 @@
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+
 import whoisdomain
 
 
 def get_domain(url):
     parsed = urlparse(url)
+
+    if not parsed.hostname:
+        return None
+
     return parsed.hostname
 
 
@@ -31,12 +36,26 @@ def get_domain_age(url):
             current_time = datetime.now()
 
         age_days = (current_time - creation_date).days
+
+        if age_days < 0:
+            return None
+
         age_years = round(age_days / 365, 2)
+
+        if age_days < 30:
+            age_category = "Very New"
+        elif age_days < 180:
+            age_category = "New"
+        elif age_days < 365:
+            age_category = "Less Than 1 Year"
+        else:
+            age_category = "Established"
 
         return {
             "creation_date": creation_date,
             "age_days": age_days,
-            "age_years": age_years
+            "age_years": age_years,
+            "age_category": age_category
         }
 
     except Exception as error:
@@ -56,5 +75,6 @@ if __name__ == "__main__":
         print("Creation Date:", result["creation_date"])
         print("Domain Age:", result["age_years"], "years")
         print("Domain Age:", result["age_days"], "days")
+        print("Age Category:", result["age_category"])
     else:
-        print("Could not retrieve domain age.")
+        print("Domain age information unavailable.")
